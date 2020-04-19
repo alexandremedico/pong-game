@@ -205,7 +205,7 @@ io.on('connection', function (socket) {
 })
 
 // Lancement de l'application
-server.listen(5234, () => console.log("Serveur ouvert sur le port 5234"));
+server.listen(process.env.PORT || 5234, () => console.log("Serveur ouvert sur le port 5234"));
 
 // Renvoie un array contenant uniquement les usernames sans index
 function getUsernames() {
