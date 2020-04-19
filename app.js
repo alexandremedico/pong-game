@@ -1,3 +1,5 @@
+"use strict";
+
 // Module
 const express = require('express');
 const http = require('http');
@@ -34,7 +36,7 @@ const options = {
     }),
     secret: "blablabla",
     saveUninitialized: true,
-    resave: false
+    resave: true
 }
 
 // Middlewares
@@ -44,29 +46,32 @@ app.use(session(options));
 
 // Routes
 app.get('/', (req, res) => {
-    // req.session.uuid = userID;
-    // console.log('je suis la')
-    // MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
-    //     if (err) {
-    //         return;
-    //     }
-    //     let db = client.db(dbName);
-    //     let collection = db.collection('sessions');
-    //     let insertion = {};
-    //     insertion.uuid = userID;
-
-    //     collection.insertOne(insertion, function (err, data) {
-    //         tableauJoueursMongo.push(data);
-    //         client.close();
-            res.redirect('/index.html');
-        // })
-    // })
+    req.session.uuid = userID;
+    res.render('/index.html', options);
 })
 
 
 // IO
 io.on('connection', function (socket) {
     console.log('a user connected ' + socket.id);
+
+    // MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+    //     if (err) {
+    //         return;
+    //     }
+    //     // console.log(data)
+    //     let db = client.db(dbName);
+    //     let collection = db.collection('sessions');
+    //     let insertion = {};
+    //     insertion.uuid = userID;
+    //     console.log(insertion.uuid)
+
+        
+    //     collection.insertOne(insertion, function (err, data) {
+    //         // tableauJoueursMongo.push(data);
+    //         client.close();
+    //     })
+    // })
 
     // partie bille et barreJoueur
     var barreJoueur1 = {
