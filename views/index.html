@@ -179,8 +179,8 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
         // direction de départ
         if (lorr <= 5) {
             console.log('en haut à gauche');
-            haut = parseFloat(HTMLDivElement3.style.top) - 0.2;
-            cote = parseFloat(HTMLDivElement3.style.left) - 0.08;
+            haut = parseFloat(HTMLDivElement3.style.top) - 1;
+            cote = parseFloat(HTMLDivElement3.style.left) - 0.4;
             HTMLDivElement3.style.top = haut + "%";
             HTMLDivElement3.style.left = cote + "%";
     
@@ -207,8 +207,8 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
     
         } else if (lorr > 5 && lorr <= 10) {
             console.log('en bas à gauche');
-            haut = parseFloat(HTMLDivElement3.style.top) + 0.2;
-            cote = parseFloat(HTMLDivElement3.style.left) - 0.08;
+            haut = parseFloat(HTMLDivElement3.style.top) + 1;
+            cote = parseFloat(HTMLDivElement3.style.left) - 0.4;
             HTMLDivElement3.style.top = haut + "%";
             HTMLDivElement3.style.left = cote + "%";
     
@@ -235,8 +235,8 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
         } else if (lorr > 10 && lorr <= 15) {
             console.log('en haut à droite');
     
-            haut = parseFloat(HTMLDivElement3.style.top) - 0.2;
-            cote = parseFloat(HTMLDivElement3.style.left) + 0.08;
+            haut = parseFloat(HTMLDivElement3.style.top) - 1;
+            cote = parseFloat(HTMLDivElement3.style.left) + 0.4;
             HTMLDivElement3.style.top = haut + "%";
             HTMLDivElement3.style.left = cote + "%";
     
@@ -261,8 +261,8 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
             }
     
         } else {
-            haut = parseFloat(HTMLDivElement3.style.top) + 0.2;
-            cote = parseFloat(HTMLDivElement3.style.left) + 0.08;
+            haut = parseFloat(HTMLDivElement3.style.top) + 1;
+            cote = parseFloat(HTMLDivElement3.style.left) + 0.4;
             HTMLDivElement3.style.top = haut + "%";
             HTMLDivElement3.style.left = cote + "%";
     
