@@ -362,14 +362,14 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
         // déplacer vers le haut
         if (searchParams.get("pseudo") === nom1.textContent) {
             console.log('je suis la')
-            haut = parseFloat(HTMLDivElement.style.top) - 1;
+            haut = parseFloat(HTMLDivElement.style.top) - 2;
             if (haut < 0) {
                 haut = 0;
             }
 
             socket.emit("deplacementHautJ1", haut);
         } else {
-            haut = parseFloat(HTMLDivElement2.style.top) - 1;
+            haut = parseFloat(HTMLDivElement2.style.top) - 2;
             if (haut < 0) {
                 haut = 0;
             }
@@ -382,7 +382,7 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
     if (touches[40]) {
         // déplacer vers le bas
         if (searchParams.get("pseudo") === nom1.textContent) {
-            haut = parseFloat(HTMLDivElement.style.top) + 1;
+            haut = parseFloat(HTMLDivElement.style.top) + 2;
             if (haut > 85) {
                 haut = 85;
             }
@@ -390,7 +390,7 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
             socket.emit("deplacementBasJ1", haut);
 
         } else {
-            haut = parseFloat(HTMLDivElement2.style.top) + 1;
+            haut = parseFloat(HTMLDivElement2.style.top) + 2;
             if (haut > 85) {
                 haut = 85;
             }
