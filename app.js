@@ -44,23 +44,23 @@ app.use(session(options));
 
 // Routes
 app.get('/', (req, res) => {
-    req.session.uuid = userID;
-    console.log('je suis la')
-    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
-        if (err) {
-            return;
-        }
-        let db = client.db(dbName);
-        let collection = db.collection('sessions');
-        let insertion = {};
-        insertion.uuid = userID;
+    // req.session.uuid = userID;
+    // console.log('je suis la')
+    // MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+    //     if (err) {
+    //         return;
+    //     }
+    //     let db = client.db(dbName);
+    //     let collection = db.collection('sessions');
+    //     let insertion = {};
+    //     insertion.uuid = userID;
 
-        collection.insertOne(insertion, function (err, data) {
-            tableauJoueursMongo.push(data);
-            client.close();
+    //     collection.insertOne(insertion, function (err, data) {
+    //         tableauJoueursMongo.push(data);
+    //         client.close();
             res.sendFile('/index.html', chemin, {data: tableauJoueursMongo});
-        })
-    })
+        // })
+    // })
 })
 
 
