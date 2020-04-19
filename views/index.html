@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr" >
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pong Game</title>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/loader.css">
+    <link rel="icon" href="assets/img/icone1.ico">
+</head>
+
+<body class="modal-active bloc-jeu">
+
+<div id="modal-container" class="modal-container">
+    <div id="contentUsername" class="modal-background">
+        <form class="modal" id="formUsername" method="GET">
+            <h2>Choisis un username</h2>
+            <input autofocus autocomplete="off" id="inputUsername" name="username"  type="text">
+            <div class="loader hidden" id="loaderUsername"></div>
+        </form>
+    </div>
+</div>
+
+<div class="titre-score">
+    <p class="joueur1">
+        <img src="assets/img/light-force.png" alt="" class="changement-logo">
+        <span class="joueurName1">alex</span>
+        :
+        <span id="pointJoueur1">0</span>
+    </p>
+    <p class="joueur2">
+        <img src="assets/img/dark-force.png" alt="" class="changement-logo">
+        <span class="joueurName2">eldra</span>
+        :
+        <span id="pointJoueur2">0</span>
+    </p>
+</div>
+
+<div class="jeu">
+    <div id="blocJoueur1"></div>
+    <div id="blocJoueur2"></div>
+    <div id="ball" class="ball"></div>
+    <div class="milieu"></div>
+</div>
+
+
+<script src="assets/js/index.js"></script>
+<!-- <script src="assets/js/bille.js"></script> -->
+<script src="/socket.io/socket.io.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script> -->
+<script>
+
+const socket = io();
+
+// Variables globales
+let formUsername = document.body.querySelector('#formUsername'),
+    inputUsername = formUsername.querySelector('#inputUsername'),
+    loaderUsername = formUsername.querySelector('#loaderUsername'),
+    username,
+    joueurName1,
+    joueurName2;
+
+// Envoie de l'username souhaité
+formUsername.addEventListener('submit', (event) => {
+    event.preventDefault();
+    let usernameWanted = inputUsername.value;
+    socket.emit('setUsername', usernameWanted);
+    inputUsername.classList.add('hidden');
+    loaderUsername.classList.remove('hidden');
+})
+
+// Réponses concernant l'assignation de l'username
+var changementNom1 = document.body.querySelector('.joueurName1');
+var changementNom2 = document.body.querySelector('.joueurName2');
+socket.on('acceptUsername', (_username, _allUsers, tableauJoueurs) => {
+    username = _username;
+    allUsers = _allUsers;
+    let usernameWanted = inputUsername.value;
+    closeModal();
+    const state = { 'page_id': 1, 'user_id': 1 };
+    const title = 'Pong Game';
+    const url = '?pseudo=' + inputUsername.value;
+
+    history.pushState(state, title, url);
+    if (changementNom1.textContent == 'alex' && changementNom1.textContent != 'eldra') {
+        changementNom1.innerHTML = tableauJoueurs[0];
+    } 
+    if (changementNom1.textContent != 'alex') {
+        changementNom2.innerHTML = tableauJoueurs[1];
+        socket.emit('changementNom', tableauJoueurs);
+    }
+})
+
+socket.on('changementJoueur2', (tableauJoueurs) => {
+    changementNom2.innerHTML = tableauJoueurs[1];
+})
+
+
+socket.on('rejectUsername', (_username) => {
+    inputUsername.value = '';
+    inputUsername.setAttribute('placeholder', `L'username ${_username} est déjà pris !`);
+    inputUsername.classList.remove('hidden');
+    loaderUsername.classList.add('hidden');
+})
+
+// Plus de 2 joueurs
+socket.on('playerMax', (tableauJoueurs) => {
+    inputUsername.value = '';
+    inputUsername.setAttribute('placeholder', 'Il y a déjà 2 joueurs de connectés!');
+    inputUsername.classList.remove('hidden');
+    loaderUsername.classList.add('hidden');
+})
+
+// Nom vide
+socket.on('emptyUsername', (usernameWanted) => {
+    inputUsername.value = '';
+    inputUsername.setAttribute('placeholder', 'Vous n\'avez pas rentez de pseudo !');
+    inputUsername.classList.remove('hidden');
+    loaderUsername.classList.add('hidden');
+})
+
+
+// Event mouvement bille
+let lorr = Math.round(Math.random() * 20), scoreJ1 = 0, scoreJ2 = 0, haut, cote, barreJ1 = document.body, barreJ2 = document.body, bool = true;
+
+socket.on('bille', function (monObjet, tableauJoueurs) {
+    // barre joueur
+    var HTMLDivElement = window.document.getElementById('blocJoueur1');
+    if ('' === HTMLDivElement.style.top) {
+        HTMLDivElement.style.top = monObjet.barreJoueur1.top + '%';
+    }
+
+    if ('' === HTMLDivElement.style.left) {
+        HTMLDivElement.style.left = monObjet.barreJoueur1.left + '%';
+    }
+
+
+    var HTMLDivElement2 = window.document.getElementById('blocJoueur2');
+    if ('' === HTMLDivElement2.style.top) {
+        HTMLDivElement2.style.top = monObjet.barreJoueur2.top + '%';
+    }
+
+    if ('' === HTMLDivElement2.style.left) {
+        HTMLDivElement2.style.left = monObjet.barreJoueur2.left + '%';
+    }
+
+
+    var HTMLDivElement3 = window.document.getElementById('ball');
+    if ('' === HTMLDivElement3.style.top) {
+        HTMLDivElement3.style.top = monObjet.bille.top +'%';
+    }
+    
+    if ('' === HTMLDivElement3.style.left) {
+        HTMLDivElement3.style.left = monObjet.bille.left + '%';
+    }
+
+    // Départ du jeu
+    let bille = document.body;
+    bille.addEventListener('keydown', (event) => {
+        if (event.keyCode == 13) {
+            console.log(tableauJoueurs);
+        }
+        if (event.keyCode == 13 && tableauJoueurs.length == 2 && bool == true) {
+            bool = false;
+            console.log(tableauJoueurs);
+            socket.emit('tableauJoueurs', tableauJoueurs);
+            boucleBille();
+        }
+    })
+
+    
+    // Déplacement bille
+    function boucleBille() {        
+    
+        // direction de départ
+        if (lorr <= 5) {
+            console.log('en haut à gauche');
+            haut = parseFloat(HTMLDivElement3.style.top) - 0.2;
+            cote = parseFloat(HTMLDivElement3.style.left) - 0.08;
+            HTMLDivElement3.style.top = haut + "%";
+            HTMLDivElement3.style.left = cote + "%";
+    
+            // collision bord
+            if (parseFloat(HTMLDivElement3.style.top) <= 0) {
+                lorr = 7;
+            }
+    
+            // collision barre
+            if (parseFloat(HTMLDivElement3.style.left) <= parseFloat(HTMLDivElement.style.left) && parseFloat(HTMLDivElement3.style.top) >= parseFloat(HTMLDivElement.style.top) && parseFloat(HTMLDivElement3.style.top) <= parseFloat(HTMLDivElement.style.top) + 15) {
+                lorr = 12;
+            }
+    
+            
+            // incrémentation score
+            if (parseFloat(HTMLDivElement3.style.left) <= 0) {
+                scoreJ2 += 1;
+                pointJoueur2.innerHTML = scoreJ2;
+                socket.emit("scoreJoueur2", scoreJ2);
+                return reset();
+            }
+            
+            socket.emit("deplacementBille", haut, cote);
+    
+        } else if (lorr > 5 && lorr <= 10) {
+            console.log('en bas à gauche');
+            haut = parseFloat(HTMLDivElement3.style.top) + 0.2;
+            cote = parseFloat(HTMLDivElement3.style.left) - 0.08;
+            HTMLDivElement3.style.top = haut + "%";
+            HTMLDivElement3.style.left = cote + "%";
+    
+            // collision bord
+            if (parseFloat(HTMLDivElement3.style.top) <= 0 || parseFloat(HTMLDivElement3.style.top) >= 98.6) {
+                lorr = 3;
+            }
+    
+            // collision barre
+            if (parseFloat(HTMLDivElement3.style.left) <= parseFloat(HTMLDivElement.style.left) && parseFloat(HTMLDivElement3.style.top) >= parseFloat(HTMLDivElement.style.top) && parseFloat(HTMLDivElement3.style.top) <= parseFloat(HTMLDivElement.style.top) + 15) {
+                lorr = 17;
+            }
+    
+            // incrémentation score
+            if (parseFloat(HTMLDivElement3.style.left) <= 0) {
+                scoreJ2 += 1;
+                pointJoueur2.innerHTML = scoreJ2;
+                socket.emit("scoreJoueur2", scoreJ2);
+                return reset();
+            }
+    
+            socket.emit("deplacementBille", haut, cote);
+    
+        } else if (lorr > 10 && lorr <= 15) {
+            console.log('en haut à droite');
+    
+            haut = parseFloat(HTMLDivElement3.style.top) - 0.2;
+            cote = parseFloat(HTMLDivElement3.style.left) + 0.08;
+            HTMLDivElement3.style.top = haut + "%";
+            HTMLDivElement3.style.left = cote + "%";
+    
+            // collision bord
+            if (parseFloat(HTMLDivElement3.style.top) <= 0 || parseFloat(HTMLDivElement3.style.top) >= 98.6) {
+                lorr = 17;
+            }
+    
+            // collision barre
+            if (parseFloat(HTMLDivElement3.style.left) >= parseFloat(HTMLDivElement2.style.left) - 0.5 && parseFloat(HTMLDivElement3.style.top) >= parseFloat(HTMLDivElement2.style.top) && parseFloat(HTMLDivElement3.style.top) <= parseFloat(HTMLDivElement2.style.top) + 15) {
+                lorr = 3;
+            }
+    
+            socket.emit("deplacementBille", haut, cote);
+    
+            // incrémentation score
+            if (parseFloat(HTMLDivElement3.style.left) >= 99) {
+                scoreJ1 += 1;
+                pointJoueur1.innerHTML = scoreJ1;
+                socket.emit("scoreJoueur1", scoreJ1);
+                return reset();
+            }
+    
+        } else {
+            haut = parseFloat(HTMLDivElement3.style.top) + 0.2;
+            cote = parseFloat(HTMLDivElement3.style.left) + 0.08;
+            HTMLDivElement3.style.top = haut + "%";
+            HTMLDivElement3.style.left = cote + "%";
+    
+            // collision bord
+            if (parseFloat(HTMLDivElement3.style.top) <= 0 || parseFloat(HTMLDivElement3.style.top) >= 98.6) {
+                lorr = 12;
+            }
+    
+            // collision barre
+            if (parseFloat(HTMLDivElement3.style.left) >= parseFloat(HTMLDivElement2.style.left) - 0.5 && parseFloat(HTMLDivElement3.style.top) >= parseFloat(HTMLDivElement2.style.top) && parseFloat(HTMLDivElement3.style.top) <= parseFloat(HTMLDivElement2.style.top) + 15) {
+                lorr = 7;
+            }
+    
+            socket.emit("deplacementBille", haut, cote);
+    
+            // incrémentation score
+            if (parseFloat(HTMLDivElement3.style.left) >= 99) {
+                scoreJ1 += 1;
+                pointJoueur1.innerHTML = scoreJ1;
+                socket.emit("scoreJoueur1", scoreJ1);
+                return reset();
+            }
+        }
+        window.requestAnimationFrame(boucleBille);
+    }
+
+    
+    // reset bille
+    function reset() {
+        HTMLDivElement3.style.top = 50 + '%';
+        HTMLDivElement3.style.left = 49.75 + '%';
+        haut = HTMLDivElement3.style.top;
+        cote = HTMLDivElement3.style.left;
+        pointJoueur2.innerHTML = 0;
+        pointJoueur1.innerHTML = 0;
+        bool = true;
+        lorr = Math.round(Math.random() * 20);
+        socket.emit("reset", haut, cote);
+    }
+
+    socket.on('resetDeconnexion', function (haut, cote) {
+        reset();
+    })
+
+
+    var touches = {
+        38: false,
+        40: false
+    }
+    // Mouvement barre joueur1
+    window.onkeydown = function(event){
+            
+        var idAnimation;
+        let code = event.keyCode;
+        // console.log(event.keyCode);
+        
+        switch (code) {
+            case 38:
+                // haut
+                touches[38] = true;
+                idAnimation = boucleDuJeu();
+                break;
+
+            case 40:
+                // bas
+                touches[40] = true;
+                idAnimation = boucleDuJeu();
+                break;
+        }
+        
+    }
+    
+    window.onkeyup = function (event) {
+        let code1 = event.keyCode;
+
+        switch (code1) {
+            case 38:
+                // haut
+                touches[38] = false;
+                break;
+
+            case 40:
+                // bas
+                touches[40] = false;
+                break;
+        }
+    }
+
+
+    function boucleDuJeu() {
+    let searchParams = new URLSearchParams(window.location.search);
+    let nom1 = document.body.querySelector('.joueurName1');
+    // let nom2 = document.body.querySelector('.joueurName2');
+    console.log(nom1.textContent);
+    console.log(searchParams.get("pseudo"));
+    if (touches[38]) {
+        // déplacer vers le haut
+        if (searchParams.get("pseudo") === nom1.textContent) {
+            console.log('je suis la')
+            haut = parseFloat(HTMLDivElement.style.top) - 1;
+            if (haut < 0) {
+                haut = 0;
+            }
+
+            socket.emit("deplacementHautJ1", haut);
+        } else {
+            haut = parseFloat(HTMLDivElement2.style.top) - 1;
+            if (haut < 0) {
+                haut = 0;
+            }
+
+            socket.emit("deplacementHautJ2", haut);
+        }
+        
+    }
+
+    if (touches[40]) {
+        // déplacer vers le bas
+        if (searchParams.get("pseudo") === nom1.textContent) {
+            haut = parseFloat(HTMLDivElement.style.top) + 1;
+            if (haut > 85) {
+                haut = 85;
+            }
+
+            socket.emit("deplacementBasJ1", haut);
+
+        } else {
+            haut = parseFloat(HTMLDivElement2.style.top) + 1;
+            if (haut > 85) {
+                haut = 85;
+            }
+
+            socket.emit("deplacementBasJ2", haut);
+
+        }
+    }}
+    
+    
+    // Actualisation joueur
+    socket.on('actualisationPlayer', (tableauJoueurs, nom) => {
+        changementNom1.innerHTML = tableauJoueurs[0].name;
+        changementNom2.innerHTML = '';
+    })
+
+
+    // réception des données du serveur
+    socket.on('deplacementHautJ1', function (haut) {
+        HTMLDivElement.style.top = haut + "%";
+    })
+    
+    socket.on('deplacementBasJ1', function (haut) {
+        HTMLDivElement.style.top = haut + "%";
+    })
+
+    socket.on('deplacementHautJ2', function (haut) {
+        HTMLDivElement2.style.top = haut + "%";
+    })
+    
+    socket.on('deplacementBasJ2', function (haut) {
+        HTMLDivElement2.style.top = haut + "%";
+    })
+
+    socket.on('deplacementBille', function (haut, cote) {
+        HTMLDivElement3.style.top = haut + "%";
+        HTMLDivElement3.style.left = cote + "%";
+    })
+
+    socket.on('scoreJoueur1', function (scoreJ1) {
+        pointJoueur1.innerHTML = scoreJ1;
+    })
+
+    socket.on('scoreJoueur2', function (scoreJ2) {
+        pointJoueur2.innerHTML = scoreJ2;
+    })
+
+    socket.on('reset', function (haut, cote) {
+        HTMLDivElement3.style.top = haut;
+        HTMLDivElement3.style.left = cote;
+    })
+
+    socket.on('tableauJoueurs', function (_tableauJoueurs) {
+        tableauJoueurs = _tableauJoueurs;
+    })
+})  
+</script>
+
+</body>
+
+</html>
