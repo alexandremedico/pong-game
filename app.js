@@ -58,7 +58,7 @@ app.get('/', (req, res) => {
     //     collection.insertOne(insertion, function (err, data) {
     //         tableauJoueursMongo.push(data);
     //         client.close();
-            res.sendFile('/index.html', chemin, {data: tableauJoueursMongo});
+            res.render('/index.html', chemin, {data: tableauJoueursMongo});
         // })
     // })
 })
