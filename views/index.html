@@ -52,6 +52,7 @@
 <!-- <script src="/socket.io/socket.io.js"></script> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script>
+window.addEventListener("DOMContentLoaded", function() {
 
 const socket = io();
 
@@ -446,6 +447,7 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
         tableauJoueurs = _tableauJoueurs;
     })
 })  
+})
 </script>
 
 </body>
