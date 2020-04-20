@@ -1,4 +1,4 @@
-# pong-game
+# Pong-game
 
 Petit jeu "pong" fait avec Node.js + express + mongodb + socket.io.
 
