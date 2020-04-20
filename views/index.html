@@ -6,9 +6,9 @@
     <title>Pong Game</title>
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css"> -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/loader.css">
+    <link rel="stylesheet" href="assets/css/listPlayer.css">
     <link rel="icon" href="assets/img/icone1.ico">
 </head>
 
@@ -18,7 +18,7 @@
     <div id="contentUsername" class="modal-background">
         <form class="modal" id="formUsername" method="GET">
             <h2>Choisis un username</h2>
-            <input autofocus autocomplete="off" id="inputUsername" name="username"  type="text">
+            <input autofocus autocomplete="off" id="inputUsername" name="username" type="text" maxlength="20">
             <div class="loader hidden" id="loaderUsername"></div>
         </form>
     </div>
@@ -26,14 +26,14 @@
 
 <div class="titre-score">
     <p class="joueur1">
-        <img src="assets/img/light-force.png" alt="" class="changement-logo">
-        <span class="joueurName1">alex</span>
+        <img src="assets/img/light-force.png" alt="" class="changement-logo1">
+        <span class="joueurName1"></span>
         :
         <span id="pointJoueur1">0</span>
     </p>
     <p class="joueur2">
-        <img src="assets/img/dark-force.png" alt="" class="changement-logo">
-        <span class="joueurName2">eldra</span>
+        <img src="assets/img/dark-force.png" alt="" class="changement-logo2">
+        <span class="joueurName2"></span>
         :
         <span id="pointJoueur2">0</span>
     </p>
@@ -46,10 +46,13 @@
     <div class="milieu"></div>
 </div>
 
+<a class="listPlayer" id="listPlayer">Liste des joueurs</a>
+<img class="croix none" src="./assets/img/croix.png" alt="" srcset="">
+<div class="windowPlayer none">
+</div>
+
 
 <script src="assets/js/index.js"></script>
-<!-- <script src="assets/js/bille.js"></script> -->
-<!-- <script src="/socket.io/socket.io.js"></script> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script>
 window.addEventListener("DOMContentLoaded", function() {
@@ -60,9 +63,13 @@ const socket = io();
 let formUsername = document.body.querySelector('#formUsername'),
     inputUsername = formUsername.querySelector('#inputUsername'),
     loaderUsername = formUsername.querySelector('#loaderUsername'),
+    listPlayer = document.body.querySelector('#listPlayer'),
+    windowPlayer = document.body.querySelector('.windowPlayer'),
+    croix = document.body.querySelector('.croix'),
     username,
     joueurName1,
     joueurName2;
+
 
 // Envoie de l'username souhaité
 formUsername.addEventListener('submit', (event) => {
@@ -73,9 +80,43 @@ formUsername.addEventListener('submit', (event) => {
     loaderUsername.classList.remove('hidden');
 })
 
+
+// liste des joueurs
+listPlayer.addEventListener('click', (event) => {
+    windowPlayer.innerHTML= '';
+    windowPlayer.classList.remove('none');
+    croix.classList.remove('none');
+    socket.emit('listeJoueurs')
+})
+
+croix.addEventListener('click', (event) => {
+    windowPlayer.classList.add('none');
+    croix.classList.add('none');
+})
+
+
+// Affichage des joueurs dans le tableau
+socket.on('addListPlayer', (items) => {
+    if (items.length < 15) {
+        for (let i = 0; i < items.length; i++) {
+            windowPlayer.insertAdjacentHTML('beforeend', '<p class="list">' + items[i].name + '</p>')
+        }
+    } else if (items.length >= 15 && items.length < 30){
+        for (let i = 15; i < items.length; i++) {
+            windowPlayer.insertAdjacentHTML('beforeend', '<p class="list">' + items[i].name + '</p>')
+        }
+    } else {
+        for (let i = 30; i < items.length; i++) {
+            windowPlayer.insertAdjacentHTML('beforeend', '<p class="list">' + items[i].name + '</p>')
+        }
+    }
+})
+
+
 // Réponses concernant l'assignation de l'username
 var changementNom1 = document.body.querySelector('.joueurName1');
 var changementNom2 = document.body.querySelector('.joueurName2');
+
 socket.on('acceptUsername', (_username, _allUsers, tableauJoueurs) => {
     username = _username;
     allUsers = _allUsers;
@@ -86,20 +127,21 @@ socket.on('acceptUsername', (_username, _allUsers, tableauJoueurs) => {
     const url = '?pseudo=' + inputUsername.value;
 
     history.pushState(state, title, url);
-    if (changementNom1.textContent == 'alex' && changementNom1.textContent != 'eldra') {
+    if (changementNom1.textContent == '') {
         changementNom1.innerHTML = tableauJoueurs[0];
     } 
-    if (changementNom1.textContent != 'alex') {
+    if (changementNom1.textContent != tableauJoueurs[1]) {
         changementNom2.innerHTML = tableauJoueurs[1];
         socket.emit('changementNom', tableauJoueurs);
     }
 })
 
+// Ajout du nom du joueur2 sur la page du joueur1
 socket.on('changementJoueur2', (tableauJoueurs) => {
     changementNom2.innerHTML = tableauJoueurs[1];
 })
 
-
+// Nom déja pris
 socket.on('rejectUsername', (_username) => {
     inputUsername.value = '';
     inputUsername.setAttribute('placeholder', `L'username ${_username} est déjà pris !`);
@@ -162,11 +204,10 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
     let bille = document.body;
     bille.addEventListener('keydown', (event) => {
         if (event.keyCode == 13) {
-            console.log(tableauJoueurs);
+            
         }
         if (event.keyCode == 13 && tableauJoueurs.length == 2 && bool == true) {
             bool = false;
-            console.log(tableauJoueurs);
             socket.emit('tableauJoueurs', tableauJoueurs);
             boucleBille();
         }
@@ -178,7 +219,7 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
     
         // direction de départ
         if (lorr <= 5) {
-            console.log('en haut à gauche');
+
             haut = parseFloat(HTMLDivElement3.style.top) - 1;
             cote = parseFloat(HTMLDivElement3.style.left) - 0.4;
             HTMLDivElement3.style.top = haut + "%";
@@ -193,8 +234,7 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
             if (parseFloat(HTMLDivElement3.style.left) <= parseFloat(HTMLDivElement.style.left) && parseFloat(HTMLDivElement3.style.top) >= parseFloat(HTMLDivElement.style.top) && parseFloat(HTMLDivElement3.style.top) <= parseFloat(HTMLDivElement.style.top) + 15) {
                 lorr = 12;
             }
-    
-            
+     
             // incrémentation score
             if (parseFloat(HTMLDivElement3.style.left) <= 0) {
                 scoreJ2 += 1;
@@ -202,11 +242,10 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
                 socket.emit("scoreJoueur2", scoreJ2);
                 return reset();
             }
-            
             socket.emit("deplacementBille", haut, cote);
     
         } else if (lorr > 5 && lorr <= 10) {
-            console.log('en bas à gauche');
+
             haut = parseFloat(HTMLDivElement3.style.top) + 1;
             cote = parseFloat(HTMLDivElement3.style.left) - 0.4;
             HTMLDivElement3.style.top = haut + "%";
@@ -229,11 +268,9 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
                 socket.emit("scoreJoueur2", scoreJ2);
                 return reset();
             }
-    
             socket.emit("deplacementBille", haut, cote);
     
         } else if (lorr > 10 && lorr <= 15) {
-            console.log('en haut à droite');
     
             haut = parseFloat(HTMLDivElement3.style.top) - 1;
             cote = parseFloat(HTMLDivElement3.style.left) + 0.4;
@@ -249,7 +286,6 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
             if (parseFloat(HTMLDivElement3.style.left) >= parseFloat(HTMLDivElement2.style.left) - 0.5 && parseFloat(HTMLDivElement3.style.top) >= parseFloat(HTMLDivElement2.style.top) && parseFloat(HTMLDivElement3.style.top) <= parseFloat(HTMLDivElement2.style.top) + 15) {
                 lorr = 3;
             }
-    
             socket.emit("deplacementBille", haut, cote);
     
             // incrémentation score
@@ -261,6 +297,7 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
             }
     
         } else {
+
             haut = parseFloat(HTMLDivElement3.style.top) + 1;
             cote = parseFloat(HTMLDivElement3.style.left) + 0.4;
             HTMLDivElement3.style.top = haut + "%";
@@ -275,7 +312,6 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
             if (parseFloat(HTMLDivElement3.style.left) >= parseFloat(HTMLDivElement2.style.left) - 0.5 && parseFloat(HTMLDivElement3.style.top) >= parseFloat(HTMLDivElement2.style.top) && parseFloat(HTMLDivElement3.style.top) <= parseFloat(HTMLDivElement2.style.top) + 15) {
                 lorr = 7;
             }
-    
             socket.emit("deplacementBille", haut, cote);
     
             // incrémentation score
@@ -296,6 +332,16 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
         HTMLDivElement3.style.left = 49.75 + '%';
         haut = HTMLDivElement3.style.top;
         cote = HTMLDivElement3.style.left;
+        bool = true;
+        lorr = Math.round(Math.random() * 20);
+        socket.emit("reset", haut, cote);
+    }
+
+    function resetBille() {
+        HTMLDivElement3.style.top = 50 + '%';
+        HTMLDivElement3.style.left = 49.75 + '%';
+        haut = HTMLDivElement3.style.top;
+        cote = HTMLDivElement3.style.left;
         pointJoueur2.innerHTML = 0;
         pointJoueur1.innerHTML = 0;
         bool = true;
@@ -304,7 +350,7 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
     }
 
     socket.on('resetDeconnexion', function (haut, cote) {
-        reset();
+        resetBille();
     })
 
 
@@ -355,28 +401,22 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
     function boucleDuJeu() {
     let searchParams = new URLSearchParams(window.location.search);
     let nom1 = document.body.querySelector('.joueurName1');
-    // let nom2 = document.body.querySelector('.joueurName2');
-    console.log(nom1.textContent);
-    console.log(searchParams.get("pseudo"));
+    
     if (touches[38]) {
         // déplacer vers le haut
         if (searchParams.get("pseudo") === nom1.textContent) {
-            console.log('je suis la')
             haut = parseFloat(HTMLDivElement.style.top) - 2;
             if (haut < 0) {
                 haut = 0;
             }
-
             socket.emit("deplacementHautJ1", haut);
         } else {
             haut = parseFloat(HTMLDivElement2.style.top) - 2;
             if (haut < 0) {
                 haut = 0;
             }
-
             socket.emit("deplacementHautJ2", haut);
         }
-        
     }
 
     if (touches[40]) {
@@ -386,17 +426,13 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
             if (haut > 85) {
                 haut = 85;
             }
-
             socket.emit("deplacementBasJ1", haut);
-
         } else {
             haut = parseFloat(HTMLDivElement2.style.top) + 2;
             if (haut > 85) {
                 haut = 85;
             }
-
             socket.emit("deplacementBasJ2", haut);
-
         }
     }}
     
@@ -406,7 +442,6 @@ socket.on('bille', function (monObjet, tableauJoueurs) {
         changementNom1.innerHTML = tableauJoueurs[0].name;
         changementNom2.innerHTML = '';
     })
-
 
     // réception des données du serveur
     socket.on('deplacementHautJ1', function (haut) {

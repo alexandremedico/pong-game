@@ -55,24 +55,6 @@ app.get('/', (req, res) => {
 io.on('connection', function (socket) {
     console.log('a user connected ' + socket.id);
 
-    // MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
-    //     if (err) {
-    //         return;
-    //     }
-    //     // console.log(data)
-    //     let db = client.db(dbName);
-    //     let collection = db.collection('sessions');
-    //     let insertion = {};
-    //     insertion.uuid = userID;
-    //     console.log(insertion.uuid)
-
-        
-    //     collection.insertOne(insertion, function (err, data) {
-    //         // tableauJoueursMongo.push(data);
-    //         client.close();
-    //     })
-    // })
-
     // partie bille et barreJoueur
     var barreJoueur1 = {
         top: 42,
@@ -95,8 +77,10 @@ io.on('connection', function (socket) {
         barreJoueur2: barreJoueur2
     }
 
+    // Envoie données barre joueur et bille
     socket.emit("bille", monObjet, tableauJoueurs);
 
+    // Envoie des données de changement
     socket.on("deplacementBille", function (haut, cote) {
         socket.emit("deplacementBille", haut, cote);
         socket.broadcast.emit("deplacementBille", haut, cote);
@@ -137,6 +121,26 @@ io.on('connection', function (socket) {
         socket.broadcast.emit("reset", haut, cote);
     })
 
+
+    // liste joueurs
+    socket.on('listeJoueurs', () => {
+        MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+            if (err) {
+                return;
+            }    
+            
+            let db = client.db(dbName);
+            let collection = db.collection('sessions');
+            let name = db.collection('sessions').name;
+            collection.find(name).toArray()
+            .then(items => {
+                console.log(`Successfully found ${items.length} documents.`)
+                socket.emit('addListPlayer', items)
+              })
+            .catch(err => console.error(`Failed to find documents: ${err}`))
+        })
+    })
+
     // Traitement pour l'assignation d'un username
     socket.on('setUsername', (usernameWanted) => {
         // traitement de la chaine de caractère
@@ -161,9 +165,24 @@ io.on('connection', function (socket) {
                 socket.emit('playerMax', tableauJoueurs);
             } else {
                 socket.join('users', () => {
+                    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, client) {
+                        if (err) {
+                            return;
+                        }
+                        let db = client.db(dbName);
+                        let collection = db.collection('sessions');
+                        let insertion = {};
+                        insertion.name = usernameWanted;
+                        insertion.uuid = userID;
+                        console.log(insertion.uuid)
+                
+                        
+                        collection.insertOne(insertion, function (err) {
+                            client.close();
+                        })
+                    })
                     usernames[socket.id] = usernameWanted;
                     tableauJoueurs.push({name: usernameWanted, id: socket.id});
-                    console.log(tableauJoueurs);
                     socket.emit('acceptUsername', usernameWanted, tableauJoueurs, getUsernames());
                     socket.broadcast.emit('acceptUsername', usernameWanted, tableauJoueurs, getUsernames());
                     socket.to('users').emit('newUser', usernameWanted, getUsernames());
@@ -183,21 +202,16 @@ io.on('connection', function (socket) {
         console.log('disconnected ' + socket.id);
         if (usernames[socket.id]) {
             let nom = usernames[socket.id].trim();
-            console.log(usernames[socket.id]);
-            console.log(tableauJoueurs[0].name)
+            
             delete usernames[socket.id];
 
             if (nom === tableauJoueurs[0].name) {
                 tableauJoueurs.shift(tableauJoueurs);
-                console.log('suppression du j1')
-                console.log(tableauJoueurs);
                 socket.broadcast.emit('actualisationPlayer', tableauJoueurs, nom);
                 socket.emit('resetDeconnexion', haut, cote);
                 socket.broadcast.emit('resetDeconnexion', haut, cote);
             } else {
                 tableauJoueurs.pop(tableauJoueurs);
-                console.log('suppression du j2')
-                console.log(tableauJoueurs);
                 socket.broadcast.emit('actualisationPlayer', tableauJoueurs, nom);
                 socket.emit('resetDeconnexion', haut, cote);
                 socket.broadcast.emit('resetDeconnexion', haut, cote);
