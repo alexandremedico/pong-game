@@ -23,9 +23,9 @@ Ce qu'il est requis pour commencer avec votre projet...
 
 ### Installation
 
-Mettez-vous à la racine de votre projet et vérifiez que vous avez bien installer les programmes précédemments cités :
+Mettez-vous à la racine de votre projet et vérifiez que vous avez bien installer les programmes précédemment cités :
 - pour vérifiez si Node.js est bien installé, tapez la ligne de commande : ``node -v``. 
-Si cela ne donne pas ``v12.xx.xx`` ou quelque chose de similaire. Téléchargez et installez-le avec ce lien : [https://nodejs.org/en/download/](https://nodejs.org/en/download/)
+Si cela ne donne pas ``v12.xx.xx`` ou quelque chose de similaire. Téléchargez et installez-le avec ce lien : [https://nodejs.org/en/download/](https://nodejs.org/en/download/).
 
 - pour MongoDB Compass, utilisez la recherche de Windows ou Mac et si vous trouvez le programme. C'est que l'avez déjà installé, sinon pouvez le télécharger ici : [https://docs.mongodb.com/compass/current/install/](https://docs.mongodb.com/compass/current/install/).
 
